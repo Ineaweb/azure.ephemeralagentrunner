@@ -1,0 +1,45 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "appName": {
+        "value": null
+      },
+      "environment": {
+        "value": "dev"
+      },
+      "location": {
+        "value": "[resourceGroup().location]"
+      },
+      "servicePlanPricingTier": {
+        "value": "S1"
+      },
+      "create_WindowsBatchPool": {
+        "value": false
+      },
+      "create_UbuntuBatchPool": {
+        "value": false
+      },
+      "AzureDevOpsIpRange": {
+        "value": "40.74.28.0/23"
+      },
+      "BatchAccountPoolVMType": {
+        "value": "Standard_F2s_v2"
+      },
+      "TaskSlotsPerNode": {
+        "value": 5
+      },
+      "AzDOUrl": {
+        "value": null
+      },
+      "AzDOToken": {
+        "value": null
+      },
+      "AzDOUbuntuPool": {
+        "value": null
+      },
+      "AzDOWindowsPool": {
+        "value": null
+      }
+    }
+  }

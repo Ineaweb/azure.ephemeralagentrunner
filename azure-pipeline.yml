@@ -1,0 +1,161 @@
+name: $(date:yyyyMMdd)$(rev:.r)
+
+trigger:
+- main   
+
+variables:
+  azureSubscription: 'Azure2'
+  buildConfiguration: 'Release'
+  projectName: 'AzFunction.BatchOrchestrator'
+  infraPath: '$(Build.SourcesDirectory)\arm\'
+  projectPath: '$(Build.SourcesDirectory)\src\$(projectName)\$(projectName).csproj'
+
+stages:
+- stage: 'Build'
+  displayName: 'Build FunctionApp & Validate ARM Template'
+  jobs:
+  - job: BuildFunctionApp
+    displayName: Build FunctionApp
+    cancelTimeoutInMinutes: 1
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - checkout: self
+      clean: true
+    - task: gittools.usegitversion.gitversion-task.UseGitVersion@5
+      displayName: GitVersion
+      inputs:
+        versionSpec: 5.6.x              
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore packages of the $(projectName) function'
+      inputs:
+        command: restore
+        projects: $(projectPath)
+        feedsToUse: config
+        nugetConfigPath: NuGet.config
+    - task: DotNetCoreCLI@2
+      displayName: 'Build the $(projectName) function'
+      inputs:
+        projects: '$(projectPath)'
+        arguments: '-c $(buildConfiguration) --no-restore'
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish and Zip the $(projectName) function'
+      inputs:
+        command: publish
+        publishWebProjects: false
+        projects: '$(projectPath)'
+        arguments: '-o $(Build.ArtifactStagingDirectory)/Function -c $(buildConfiguration) --no-build'
+        zipAfterPublish: true
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact: drop'
+      condition: and(succeeded(), ne(variables['Build.Reason'], 'Schedule'))
+  - job: ValidateARMTemplate
+    displayName: Validate ARM Template
+    cancelTimeoutInMinutes: 1
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - checkout: self
+      clean: true
+    - task: gittools.usegitversion.gitversion-task.UseGitVersion@5
+      displayName: GitVersion
+      inputs:
+        versionSpec: 5.6.x              
+    - task: AzureResourceGroupDeployment@2
+      displayName: 'Datahub template validation'
+      inputs:
+        azureSubscription: '$(azureSubscription)'
+        action: 'Create Or Update Resource Group'
+        resourceGroupName: '$(devResourceGroupName)'
+        location: 'West Europe'
+        templateLocation: 'Linked artifact'
+        csmFile: '$(infraPath)azuredeploy.json'
+        csmParametersFile: '$(infraPath)azuredeploy.parameters.json'
+        overrideParameters: '-appName $(devResourceGroupName)'
+        deploymentMode: 'Validation'
+    - task: ArchiveFiles@2
+      displayName: 'Archive template'
+      inputs:
+        rootFolderOrFile: '$(infraPath)'
+        includeRootFolder: false
+        archiveFile: '$(Build.ArtifactStagingDirectory)/Infra/$(Build.BuildNumber).zip'
+      condition: and(succeeded(), ne(variables['Build.Reason'], 'Schedule')) 
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact: drop'
+      condition: and(succeeded(), ne(variables['Build.Reason'], 'Schedule')) 
+
+- stage: 'Deploy'
+  displayName: 'Deploy to the environment'
+  dependsOn: Build
+  jobs:
+  - deployment: Deploy
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: DEV
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'Schedule')) 
+    variables:
+    - group: 'DEV Configuration'
+    workspace:
+      clean: all
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - task: ExtractFiles@1
+              inputs:
+                archiveFilePatterns: '$(Pipeline.Workspace)/drop/Infra/*.zip'
+                destinationFolder: '$(Pipeline.Workspace)/Extract'
+                cleanDestinationFolder: true
+                overwriteExistingFiles: false
+
+            - task: AzureResourceGroupDeployment@2
+              displayName: 'Datahub template validation'
+              inputs:
+                azureSubscription: '$(azureSubscription)'
+                action: 'Create Or Update Resource Group'
+                resourceGroupName: '$(devResourceGroupName)'
+                location: 'West Europe'
+                templateLocation: 'Linked artifact'
+                csmFile: '$(Pipeline.Workspace)/Extract/azuredeploy.json'
+                csmParametersFile: '$(Pipeline.Workspace)/Extract/azuredeploy.parameters.json'
+                overrideParameters: '-appName $(devResourceGroupName) -create_WindowsBatchPool $(create_WindowsBatchPool) -create_UbuntuBatchPool $(create_UbuntuBatchPool) -AzDOUrl $(AzDOUrl) -AzDOToken $(AzDOToken) -AzDOUbuntuPool $(AzDOUbuntuPool) -AzDOWindowsPool $(AzDOWindowsPool)'
+                deploymentMode: 'Incremental'
+
+            - task: AzureCLI@2
+              displayName: 'Import Docker Image from dockerhub'
+              inputs:
+                azureSubscription: '$(azureSubscription)'
+                scriptType: 'pscore'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  az acr update --name poc001devacr --public-network-enabled true
+                  az acr import -n $(devResourceGroupName)devacr --source docker.io/pmorisseau/azdo-agent:ubuntu-20.04-azdo -t azdo-agent:ubuntu-20.04-azdo
+                  az acr import -n $(devResourceGroupName)devacr --source docker.io/pmorisseau/azdo-agent:ubuntu-20.04-azdo -t azdo-agent:ubuntu-18.04-azdo
+                  az acr import -n $(devResourceGroupName)devacr --source docker.io/pmorisseau/azdo-agent:windows-core-ltsc2019-azdo -t azdo-agent:windows-core-ltsc2019-azdo
+                  az acr update --name poc001devacr --public-network-enabled false
+
+            - task: AzureCLI@2
+              displayName: 'Open firewall for source code push'
+              inputs:
+                azureSubscription: '$(azureSubscription)'
+                scriptType: 'pscore'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  $ip = Invoke-RestMethod http://ipinfo.io/json | Select -exp ip
+                  az webapp config access-restriction add -n $(devResourceGroupName)-dev-fun -g $(devResourceGroupName) --rule-name MSHostedAgent --scm-site true --action Allow --ip-address $ip --priority 200
+
+            - task: AzureFunctionApp@1
+              inputs:
+                azureSubscription: '$(azureSubscription)'
+                appType: 'functionAppLinux'
+                appName: '$(devResourceGroupName)-dev-fun'
+                package: '$(Pipeline.Workspace)/drop/Function/$(projectName).zip'
+
+            - task: AzureCLI@2
+              displayName: 'Close firewall for source code push'
+              inputs:
+                azureSubscription: '$(azureSubscription)'
+                scriptType: 'pscore'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  az webapp config access-restriction remove -n $(devResourceGroupName)-dev-fun -g $(devResourceGroupName) --rule-name MSHostedAgent --scm-site true
