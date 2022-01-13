@@ -7,6 +7,7 @@ parameters:
 - name: devResourceGroupName
   displayName: 'Resource group name'
   type: string
+  default: 'poc001'
 
 variables:
   azureSubscription: 'Azure2'
@@ -71,12 +72,12 @@ stages:
       inputs:
         azureSubscription: '$(azureSubscription)'
         action: 'Create Or Update Resource Group'
-        resourceGroupName: '$(devResourceGroupName)'
+        resourceGroupName: '${{ parameters.devResourceGroupName }}'
         location: 'West Europe'
         templateLocation: 'Linked artifact'
         csmFile: '$(infraPath)azuredeploy.json'
         csmParametersFile: '$(infraPath)azuredeploy.parameters.json'
-        overrideParameters: '-appName $(devResourceGroupName)'
+        overrideParameters: '-appName ${{ parameters.devResourceGroupName }}'
         deploymentMode: 'Validation'
     - task: ArchiveFiles@2
       displayName: 'Archive template'
@@ -118,12 +119,12 @@ stages:
               inputs:
                 azureSubscription: '$(azureSubscription)'
                 action: 'Create Or Update Resource Group'
-                resourceGroupName: '$(devResourceGroupName)'
+                resourceGroupName: '${{ parameters.devResourceGroupName }}'
                 location: 'West Europe'
                 templateLocation: 'Linked artifact'
                 csmFile: '$(Pipeline.Workspace)/Extract/azuredeploy.json'
                 csmParametersFile: '$(Pipeline.Workspace)/Extract/azuredeploy.parameters.json'
-                overrideParameters: '-appName $(devResourceGroupName) -create_WindowsBatchPool $(create_WindowsBatchPool) -create_UbuntuBatchPool $(create_UbuntuBatchPool) -AzDOUrl $(AzDOUrl) -AzDOToken $(AzDOToken) -AzDOUbuntuPool $(AzDOUbuntuPool) -AzDOWindowsPool $(AzDOWindowsPool)'
+                overrideParameters: '-appName ${{ parameters.devResourceGroupName }} -create_WindowsBatchPool $(create_WindowsBatchPool) -create_UbuntuBatchPool $(create_UbuntuBatchPool) -AzDOUrl $(AzDOUrl) -AzDOToken $(AzDOToken) -AzDOUbuntuPool $(AzDOUbuntuPool) -AzDOWindowsPool $(AzDOWindowsPool)'
                 deploymentMode: 'Incremental'
 
             - task: AzureCLI@2
@@ -134,9 +135,9 @@ stages:
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   az acr update --name poc001devacr --public-network-enabled true
-                  az acr import -n $(devResourceGroupName)devacr --source docker.io/pmorisseau/azdo-agent:ubuntu-20.04-azdo -t azdo-agent:ubuntu-20.04-azdo
-                  az acr import -n $(devResourceGroupName)devacr --source docker.io/pmorisseau/azdo-agent:ubuntu-20.04-azdo -t azdo-agent:ubuntu-18.04-azdo
-                  az acr import -n $(devResourceGroupName)devacr --source docker.io/pmorisseau/azdo-agent:windows-core-ltsc2019-azdo -t azdo-agent:windows-core-ltsc2019-azdo
+                  az acr import -n ${{ parameters.devResourceGroupName }}devacr --source docker.io/pmorisseau/azdo-agent:ubuntu-20.04-azdo -t azdo-agent:ubuntu-20.04-azdo
+                  az acr import -n ${{ parameters.devResourceGroupName }}devacr --source docker.io/pmorisseau/azdo-agent:ubuntu-20.04-azdo -t azdo-agent:ubuntu-18.04-azdo
+                  az acr import -n ${{ parameters.devResourceGroupName }}devacr --source docker.io/pmorisseau/azdo-agent:windows-core-ltsc2019-azdo -t azdo-agent:windows-core-ltsc2019-azdo
                   az acr update --name poc001devacr --public-network-enabled false
 
             - task: AzureCLI@2
@@ -147,13 +148,13 @@ stages:
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   $ip = Invoke-RestMethod http://ipinfo.io/json | Select -exp ip
-                  az webapp config access-restriction add -n $(devResourceGroupName)-dev-fun -g $(devResourceGroupName) --rule-name MSHostedAgent --scm-site true --action Allow --ip-address $ip --priority 200
+                  az webapp config access-restriction add -n ${{ parameters.devResourceGroupName }}-dev-fun -g ${{ parameters.devResourceGroupName }} --rule-name MSHostedAgent --scm-site true --action Allow --ip-address $ip --priority 200
 
             - task: AzureFunctionApp@1
               inputs:
                 azureSubscription: '$(azureSubscription)'
                 appType: 'functionAppLinux'
-                appName: '$(devResourceGroupName)-dev-fun'
+                appName: '${{ parameters.devResourceGroupName }}-dev-fun'
                 package: '$(Pipeline.Workspace)/drop/Function/$(projectName).zip'
 
             - task: AzureCLI@2
@@ -163,4 +164,4 @@ stages:
                 scriptType: 'pscore'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
-                  az webapp config access-restriction remove -n $(devResourceGroupName)-dev-fun -g $(devResourceGroupName) --rule-name MSHostedAgent --scm-site true
+                  az webapp config access-restriction remove -n ${{ parameters.devResourceGroupName }}-dev-fun -g ${{ parameters.devResourceGroupName }} --rule-name MSHostedAgent --scm-site true
