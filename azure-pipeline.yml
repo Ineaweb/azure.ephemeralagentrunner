@@ -24,7 +24,7 @@ stages:
     displayName: Build FunctionApp
     cancelTimeoutInMinutes: 1
     pool:
-      vmImage: 'ubuntu-latest'
+      vmImage: 'windows-2022'
     steps:
     - checkout: self
       clean: true
