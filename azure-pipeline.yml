@@ -12,8 +12,8 @@ variables:
   azureSubscription: 'Azure2'
   buildConfiguration: 'Release'
   projectName: 'AzFunction.BatchOrchestrator'
-  infraPath: '$(Build.SourcesDirectory)\arm\'
-  projectPath: '$(Build.SourcesDirectory)\src\$(projectName)\$(projectName).csproj'
+  infraPath: '$(Build.SourcesDirectory)/arm/'
+  projectPath: '$(Build.SourcesDirectory)/src/$(projectName)/$(projectName).csproj'
 
 stages:
 - stage: 'Build'
