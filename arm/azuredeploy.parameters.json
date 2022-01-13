@@ -30,16 +30,16 @@
         "value": 5
       },
       "AzDOUrl": {
-        "value": null
+        "value": ""
       },
       "AzDOToken": {
-        "value": null
+        "value": ""
       },
       "AzDOUbuntuPool": {
-        "value": null
+        "value": ""
       },
       "AzDOWindowsPool": {
-        "value": null
+        "value": ""
       }
     }
   }
