@@ -8,6 +8,14 @@ parameters:
   displayName: 'Resource group name'
   type: string
   default: 'poc001'
+- name: create_WindowsBatchPool
+  displayName: 'Create Windows Batch Pool'
+  type: boolean
+  default: false
+- name: create_UbuntuBatchPool
+  displayName: 'Create Ubuntu Batch Pool'
+  type: boolean
+  default: false
 
 variables:
   azureSubscription: 'Azure2'
@@ -68,7 +76,7 @@ stages:
       inputs:
         versionSpec: 5.6.x              
     - task: AzureResourceGroupDeployment@2
-      displayName: 'Datahub template validation'
+      displayName: 'ARM template validation'
       inputs:
         azureSubscription: '$(azureSubscription)'
         action: 'Create Or Update Resource Group'
@@ -115,7 +123,7 @@ stages:
                 overwriteExistingFiles: false
 
             - task: AzureResourceGroupDeployment@2
-              displayName: 'Datahub template validation'
+              displayName: 'ARM template execution'
               inputs:
                 azureSubscription: '$(azureSubscription)'
                 action: 'Create Or Update Resource Group'
@@ -124,7 +132,7 @@ stages:
                 templateLocation: 'Linked artifact'
                 csmFile: '$(Pipeline.Workspace)/Extract/azuredeploy.json'
                 csmParametersFile: '$(Pipeline.Workspace)/Extract/azuredeploy.parameters.json'
-                overrideParameters: '-appName ${{ parameters.devResourceGroupName }} -create_WindowsBatchPool true -create_UbuntuBatchPool true -AzDOUrl $(AzDOUrl) -AzDOToken $(AzDOToken) -AzDOUbuntuPool $(AzDOUbuntuPool) -AzDOWindowsPool $(AzDOWindowsPool)'
+                overrideParameters: '-appName ${{ parameters.devResourceGroupName }} -create_WindowsBatchPool ${{ parameters.create_WindowsBatchPool }} -create_UbuntuBatchPool ${{ parameters.create_UbuntuBatchPool }} -AzDOUrl $(AzDOUrl) -AzDOToken $(AzDOToken) -AzDOUbuntuPool $(AzDOUbuntuPool) -AzDOWindowsPool $(AzDOWindowsPool)'
                 deploymentMode: 'Incremental'
 
             - task: AzureCLI@2
