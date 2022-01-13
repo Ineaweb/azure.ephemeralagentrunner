@@ -1,7 +1,12 @@
 name: $(date:yyyyMMdd)$(rev:.r)
 
 trigger:
-- main   
+- main 
+
+parameters:
+- name: devResourceGroupName
+  displayName: 'Resource group name'
+  type: string
 
 variables:
   azureSubscription: 'Azure2'
