@@ -109,6 +109,10 @@ stages:
     condition: and(succeeded(), ne(variables['Build.Reason'], 'Schedule')) 
     variables:
     - group: 'DEV Configuration'
+    - name: CreateWindowsPool
+      value: ${{ parameters.create_WindowsBatchPool }}
+    - name: CreateUbuntuPool
+      value: ${{ parameters.create_UbuntuBatchPool }}      
     workspace:
       clean: all
     strategy:
@@ -132,7 +136,7 @@ stages:
                 templateLocation: 'Linked artifact'
                 csmFile: '$(Pipeline.Workspace)/Extract/azuredeploy.json'
                 csmParametersFile: '$(Pipeline.Workspace)/Extract/azuredeploy.parameters.json'
-                overrideParameters: '-appName ${{ parameters.devResourceGroupName }} -create_WindowsBatchPool ${{ parameters.create_WindowsBatchPool }} -create_UbuntuBatchPool ${{ parameters.create_UbuntuBatchPool }} -AzDOUrl $(AzDOUrl) -AzDOToken $(AzDOToken) -AzDOUbuntuPool $(AzDOUbuntuPool) -AzDOWindowsPool $(AzDOWindowsPool)'
+                overrideParameters: '-appName ${{ parameters.devResourceGroupName }} -create_WindowsBatchPool $(CreateWindowsPool) -create_UbuntuBatchPool $(CreateUbuntuPool) -AzDOUrl $(AzDOUrl) -AzDOToken $(AzDOToken) -AzDOUbuntuPool $(AzDOUbuntuPool) -AzDOWindowsPool $(AzDOWindowsPool)'
                 deploymentMode: 'Incremental'
 
             - task: AzureCLI@2
