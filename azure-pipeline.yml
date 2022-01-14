@@ -122,17 +122,17 @@ stages:
                 cleanDestinationFolder: true
                 overwriteExistingFiles: false
 
-${{ if parameters.create_WindowsBatchPool }}:
+- ${{ ifparameters.create_WindowsBatchPool }}:
             - script: echo '##vso[task.setvariable variable=CreateWindowsPool]true'
               displayName: "Set CreateWindowsPool = 'true' "
-${{ else }}:
+- ${{ else }}:
             - script: echo '##vso[task.setvariable variable=CreateWindowsPool]false'
               displayName: "Set CreateWindowsPool = 'false' "
 
-${{ if parameters.create_UbuntuBatchPool }}:
+- ${{ if parameters.create_UbuntuBatchPool }}:
             - script: echo '##vso[task.setvariable variable=CreateUbuntuPool]true'
               displayName: "Set CreateUbuntuPool = 'true' "
-${{ else }}:
+- ${{ else }}:
             - script: echo '##vso[task.setvariable variable=CreateUbuntuPool]false'
               displayName: "Set CreateUbuntuPool = 'false' "
 
