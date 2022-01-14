@@ -24,6 +24,17 @@ variables:
   infraPath: '$(Build.SourcesDirectory)/arm/'
   projectPath: '$(Build.SourcesDirectory)/src/$(projectName)/$(projectName).csproj'
 
+${{ if parameters.create_WindowsBatchPool }}: 
+  CreateWindowsPool: 'true'
+${{ else }}:
+  CreateWindowsPool: 'false'
+      
+${{ if parameters.create_UbuntuBatchPool }}: 
+  CreateUbuntuPool: 'true'
+${{ else }}:
+  CreateUbuntuPool: 'false'
+
+
 stages:
 - stage: 'Build'
   displayName: 'Build FunctionApp & Validate ARM Template'
@@ -109,16 +120,6 @@ stages:
     condition: and(succeeded(), ne(variables['Build.Reason'], 'Schedule')) 
     variables:
     - group: 'DEV Configuration'
-    - name: CreateWindowsPool
-${{ if parameters.create_WindowsBatchPool }}: 
-      value: 'true'
-${{ else }}:
-      value: 'false'
-    - name: CreateUbuntuPool
-${{ if parameters.create_UbuntuBatchPool }}: 
-      value: 'true'
-${{ else }}:
-      value: 'false'    
     workspace:
       clean: all
     strategy:
