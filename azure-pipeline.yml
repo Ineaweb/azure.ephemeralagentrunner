@@ -136,7 +136,7 @@ stages:
                 templateLocation: 'Linked artifact'
                 csmFile: '$(Pipeline.Workspace)/Extract/azuredeploy.json'
                 csmParametersFile: '$(Pipeline.Workspace)/Extract/azuredeploy.parameters.json'
-                overrideParameters: '-appName ${{ parameters.devResourceGroupName }} -create_WindowsBatchPool $(CreateWindowsPool) -create_UbuntuBatchPool $(CreateUbuntuPool) -AzDOUrl $(AzDOUrl) -AzDOToken $(AzDOToken) -AzDOUbuntuPool $(AzDOUbuntuPool) -AzDOWindowsPool $(AzDOWindowsPool)'
+                overrideParameters: '-appName ${{ parameters.devResourceGroupName }} -create_WindowsBatchPool true -create_UbuntuBatchPool true -AzDOUrl $(AzDOUrl) -AzDOToken $(AzDOToken) -AzDOUbuntuPool $(AzDOUbuntuPool) -AzDOWindowsPool $(AzDOWindowsPool)'
                 deploymentMode: 'Incremental'
 
             - task: AzureCLI@2
