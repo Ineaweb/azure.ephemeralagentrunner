@@ -110,9 +110,9 @@ stages:
     variables:
     - group: 'DEV Configuration'
     - name: CreateWindowsPool
-      value: ${{ parameters.create_WindowsBatchPool }}
+      value: '${{ parameters.create_WindowsBatchPool }}'
     - name: CreateUbuntuPool
-      value: ${{ parameters.create_UbuntuBatchPool }}      
+      value: '${{ parameters.create_UbuntuBatchPool }}'     
     workspace:
       clean: all
     strategy:
