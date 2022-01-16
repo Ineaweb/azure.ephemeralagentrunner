@@ -325,7 +325,8 @@
         "name": "[concat('EndpointDnsRecords-', uniqueString(resourceId('Microsoft.Network/virtualNetworks', variables('net_name'))))]",
         "dependsOn": [
             "[string('privatelink.azurecr.io')]",
-            "[resourceId('Microsoft.Network/virtualNetworks', variables('net_name'))]"
+            "[resourceId('Microsoft.Network/virtualNetworks', variables('net_name'))]",
+            "[resourceId('Microsoft.Network/privateEndpoints', variables('acrprivateEndpoint_name'))]"
         ],
         "properties": {
             "mode": "Incremental",
@@ -338,7 +339,7 @@
                     "value": "[string('privatelink.azurecr.io')]"
                 },
                 "privateEndpointNicResourceId": {
-                    "value": "[reference('acrprivateEndpoint_name').outputs.networkInterfaceId.value]"
+                    "value": "[reference(variables('acrprivateEndpoint_name'), variables('privateEndpoint_api')).outputs.networkInterfaceId.value]"
                 },
                 "nicRecordsTemplateUri": {
                     "value": "https://containerregistry.hosting.portal.azure.net/containerregistry/Content/1.0.20211203.5/DeploymentTemplates/PrivateDnsForPrivateEndpointNic.json"
