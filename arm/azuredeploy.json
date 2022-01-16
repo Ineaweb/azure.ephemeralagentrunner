@@ -301,7 +301,6 @@
         "type": "Microsoft.Network/privateDnsZones",
         "apiVersion": "[variables('privateDnsZones_api')]",
         "name": "[string('privatelink.azurecr.io')]",
-        "location": "[parameters('location')]",
         "tags": {},
         "properties": {}
     },
@@ -309,7 +308,6 @@
         "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
         "apiVersion": "[variables('privateDnsZones_api')]",
         "name": "[concat(string('privatelink.azurecr.io'), '/', uniqueString(resourceId('Microsoft.Network/virtualNetworks', variables('net_name'))))]",
-        "location": "[parameters('location')]",
         "dependsOn": [
             "[string('privatelink.azurecr.io')]"
         ],
