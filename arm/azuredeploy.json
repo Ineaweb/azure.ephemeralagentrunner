@@ -149,6 +149,7 @@
     "blobService_api": "2021-06-01",
     "privateEndpoint_api": "2021-05-01",
     "resourcedeployment_api": "2021-04-01",
+    "privateDnsZones_api": "2020-06-01",
     "sto_name": "[concat(parameters('appName') , parameters('environment') , 'sto')]",
     "net_name": "[concat(parameters('appName') , '-' , parameters('environment') , '-net')]",
     "pln_name": "[concat(parameters('appName') , '-' , parameters('environment') , '-pln')]",
@@ -298,17 +299,17 @@
     },
     {
         "type": "Microsoft.Network/privateDnsZones",
-        "apiVersion": "[variables('privateEndpoint_api')]",
+        "apiVersion": "[variables('privateDnsZones_api')]",
         "name": "[string('privatelink.azurecr.io')]",
-        "location": "global",
+        "location": "[parameters('location')]",
         "tags": {},
         "properties": {}
     },
     {
         "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
-        "apiVersion": "[variables('privateEndpoint_api')]",
+        "apiVersion": "[variables('privateDnsZones_api')]",
         "name": "[concat(string('privatelink.azurecr.io'), '/', uniqueString(resourceId('Microsoft.Network/virtualNetworks', variables('net_name'))))]",
-        "location": "global",
+        "location": "[parameters('location')]",
         "dependsOn": [
             "[string('privatelink.azurecr.io')]"
         ],
