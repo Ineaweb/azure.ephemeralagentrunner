@@ -410,40 +410,45 @@
       }
     },
     {
-        "type": "Microsoft.Resources/deployments",
-        "apiVersion": "[variables('resourcedeployment_api')]",
-        "name": "[concat('EndpointDnsRecords-', uniqueString(resourceId('Microsoft.Batch/batchAccounts', variables('batchAccount_name'))))]",
+        "type": "Microsoft.Network/privateDnsZones",
+        "apiVersion": "[variables('privateDnsZones_api')]",
+        "name": "[concat('privatelink.',parameters('location'),'.batch.azure.com')]",
+        "location": "global",
+        "tags": {},
+        "properties": {}
+    },
+    {
+        "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+        "apiVersion": "[variables('privateDnsZones_api')]",
+        "name": "[concat(concat('privatelink.',parameters('location'),'.batch.azure.com'), '/', uniqueString(resourceId('Microsoft.Network/virtualNetworks', variables('net_name'))))]",
+        "location": "global",
         "dependsOn": [
-            "[string('privatelink.azurecr.io')]",
-            "[resourceId('Microsoft.Network/virtualNetworks', variables('net_name'))]",
-            "[resourceId('Microsoft.Network/privateEndpoints', variables('abaprivateEndpoint_name'))]"
+            "[concat('privatelink.',parameters('location'),'.batch.azure.com')]"
         ],
         "properties": {
-            "mode": "Incremental",
-            "templatelink": {
-                "contentVersion": "1.0.0.0",
-                "uri": "https://containerregistry.hosting.portal.azure.net/containerregistry/Content/1.0.20211203.5/DeploymentTemplates/PrivateDnsForPrivateEndpoint.json"
+            "virtualNetwork": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks', variables('net_name'))]"
             },
-            "parameters": {
-                "privateDnsName": {
-                    "value": "[string('privatelink.azurecr.io')]"
-                },
-                "privateEndpointNicResourceId": {
-                    "value": "[reference(variables('abaprivateEndpoint_name'), variables('privateEndpoint_api')).networkInterfaces[0].id]"
-                },
-                "nicRecordsTemplateUri": {
-                    "value": "https://containerregistry.hosting.portal.azure.net/containerregistry/Content/1.0.20211203.5/DeploymentTemplates/PrivateDnsForPrivateEndpointNic.json"
-                },
-                "ipConfigRecordsTemplateUri": {
-                    "value": "https://containerregistry.hosting.portal.azure.net/containerregistry/Content/1.0.20211203.5/DeploymentTemplates/PrivateDnsForPrivateEndpointIpConfig.json"
-                },
-                "uniqueId": {
-                    "value": "[uniqueString(resourceId('Microsoft.Network/virtualNetworks', variables('net_name')))]"
-                },
-                "existingRecords": {
-                    "value": {}
+            "registrationEnabled": false
+        }
+    },    
+    {
+        "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+        "apiVersion": "2020-03-01",
+        "name": "[concat(variables('abaprivateEndpoint_name'), '/', 'default')]",
+        "location": "[parameters('location')]",
+        "dependsOn": [
+            "[resourceId('Microsoft.Network/privateDnsZones', concat('privatelink.',parameters('location'),'.batch.azure.com'))]"
+        ],
+        "properties": {
+            "privateDnsZoneConfigs": [
+                {
+                    "name": "[concat('privatelink-',parameters('location'),'-batch-azure-com')]",
+                    "properties": {
+                        "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', concat('privatelink.',parameters('location'),'.batch.azure.com'))]"
+                    }
                 }
-            }
+            ]
         }
     },        
     {
