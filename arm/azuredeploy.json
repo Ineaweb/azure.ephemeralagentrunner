@@ -157,6 +157,7 @@
     "batchAccount_name": "[concat(parameters('appName') , parameters('environment') , 'aba')]",
     "containerRegistry_name": "[concat(parameters('appName') , parameters('environment') , 'acr')]",
     "acrprivateEndpoint_name": "[concat(parameters('appName') , '-' , parameters('environment') , '-acr-pep')]",
+    "abaprivateEndpoint_name": "[concat(parameters('appName') , '-' , parameters('environment') , '-aba-pep')]",
     "storageAccountid": "[concat(resourceGroup().id, '/providers/', 'Microsoft.Storage/storageAccounts/', parameters('appName') , parameters('environment') , 'sto')]",
     "batchAccountid": "[concat(resourceGroup().id, '/providers/', 'Microsoft.Batch/batchAccounts/', variables('batchAccount_name'))]",
     "containerRegistryid": "[concat(resourceGroup().id, '/providers/', 'Microsoft.ContainerRegistry/registries/', variables('containerRegistry_name'))]"
@@ -367,7 +368,7 @@
       },
       "properties": {
           "poolAllocationMode": "BatchService",
-          "publicNetworkAccess": "Enabled",
+          "publicNetworkAccess": "Disabled",
           "encryption": {
               "keySource": "Microsoft.Batch"
           },
@@ -378,6 +379,71 @@
           ]
       }
     },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "[variables('privateEndpoint_api')]",
+      "name": "[variables('abaprivateEndpoint_name')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+          "[resourceId('Microsoft.Batch/batchAccounts', variables('batchAccount_name'))]",
+          "[resourceId('Microsoft.Network/virtualNetworks', variables('net_name'))]"
+      ],
+      "properties": {
+          "privateLinkServiceConnections": [
+              {
+                  "name": "[variables('abaprivateEndpoint_name')]",
+                  "properties": {
+                      "privateLinkServiceId": "[resourceId('Microsoft.Batch/batchAccounts', variables('batchAccount_name'))]",
+                      "groupIds": [
+                          "registry"
+                      ]
+                  }
+              }
+          ],
+          "manualPrivateLinkServiceConnections": [],
+          "subnet": {
+              "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('net_name'), 'batch')]"
+          },
+          "customDnsConfigs": []
+      }
+    },
+    {
+        "type": "Microsoft.Resources/deployments",
+        "apiVersion": "[variables('resourcedeployment_api')]",
+        "name": "[concat('EndpointDnsRecords-', uniqueString(resourceId('Microsoft.Network/virtualNetworks', variables('net_name'))))]",
+        "dependsOn": [
+            "[string('privatelink.azurecr.io')]",
+            "[resourceId('Microsoft.Network/virtualNetworks', variables('net_name'))]",
+            "[resourceId('Microsoft.Network/privateEndpoints', variables('abaprivateEndpoint_name'))]"
+        ],
+        "properties": {
+            "mode": "Incremental",
+            "templatelink": {
+                "contentVersion": "1.0.0.0",
+                "uri": "https://containerregistry.hosting.portal.azure.net/containerregistry/Content/1.0.20211203.5/DeploymentTemplates/PrivateDnsForPrivateEndpoint.json"
+            },
+            "parameters": {
+                "privateDnsName": {
+                    "value": "[string('privatelink.azurecr.io')]"
+                },
+                "privateEndpointNicResourceId": {
+                    "value": "[reference(variables('abaprivateEndpoint_name'), variables('privateEndpoint_api')).networkInterfaces[0].id]"
+                },
+                "nicRecordsTemplateUri": {
+                    "value": "https://containerregistry.hosting.portal.azure.net/containerregistry/Content/1.0.20211203.5/DeploymentTemplates/PrivateDnsForPrivateEndpointNic.json"
+                },
+                "ipConfigRecordsTemplateUri": {
+                    "value": "https://containerregistry.hosting.portal.azure.net/containerregistry/Content/1.0.20211203.5/DeploymentTemplates/PrivateDnsForPrivateEndpointIpConfig.json"
+                },
+                "uniqueId": {
+                    "value": "[uniqueString(resourceId('Microsoft.Network/virtualNetworks', variables('net_name')))]"
+                },
+                "existingRecords": {
+                    "value": {}
+                }
+            }
+        }
+    },        
     {
       "condition":"[parameters('create_WindowsBatchPool')]",
       "type": "Microsoft.Batch/batchAccounts/pools",
