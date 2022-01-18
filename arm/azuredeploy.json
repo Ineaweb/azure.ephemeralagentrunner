@@ -179,7 +179,9 @@
             "name": "batch",
             "properties": {
                 "addressPrefix": "192.168.1.0/27",
-                "delegations": []
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Disabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
             }
           },
           {
