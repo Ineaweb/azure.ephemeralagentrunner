@@ -397,7 +397,7 @@
                   "properties": {
                       "privateLinkServiceId": "[resourceId('Microsoft.Batch/batchAccounts', variables('batchAccount_name'))]",
                       "groupIds": [
-                          "registry"
+                          "batchAccount"
                       ]
                   }
               }
@@ -438,7 +438,8 @@
         "name": "[concat(variables('abaprivateEndpoint_name'), '/', 'default')]",
         "location": "[parameters('location')]",
         "dependsOn": [
-            "[resourceId('Microsoft.Network/privateDnsZones', concat('privatelink.',parameters('location'),'.batch.azure.com'))]"
+            "[resourceId('Microsoft.Network/privateDnsZones', concat('privatelink.',parameters('location'),'.batch.azure.com'))]",
+            "[resourceId('Microsoft.Network/privateEndpoints', variables('abaprivateEndpoint_name'))]"
         ],
         "properties": {
             "privateDnsZoneConfigs": [
