@@ -16,6 +16,10 @@ parameters:
   displayName: 'Create Ubuntu Batch Pool'
   type: boolean
   default: false
+- name: allowBatchPublicNetworkAccess
+  displayName: 'Allow Batch public network access'
+  type: boolean
+  default: false
 
 variables:
   azureSubscription: 'Azure2'
@@ -138,18 +142,33 @@ stages:
               - script: echo '##vso[task.setvariable variable=CreateUbuntuPool]false'
                 displayName: "Set CreateUbuntuPool = 'false' "
 
-            - task: AzureResourceGroupDeployment@2
-              displayName: 'ARM template execution'
-              inputs:
-                azureSubscription: '$(azureSubscription)'
-                action: 'Create Or Update Resource Group'
-                resourceGroupName: '${{ parameters.devResourceGroupName }}'
-                location: 'West Europe'
-                templateLocation: 'Linked artifact'
-                csmFile: '$(Pipeline.Workspace)/Extract/azuredeploy.json'
-                csmParametersFile: '$(Pipeline.Workspace)/Extract/azuredeploy.parameters.json'
-                overrideParameters: '-appName ${{ parameters.devResourceGroupName }} -create_WindowsBatchPool $(CreateWindowsPool) -create_UbuntuBatchPool $(CreateUbuntuPool) -AzDOUrl $(AzDOUrl) -AzDOToken $(AzDOToken) -AzDOUbuntuPool $(AzDOUbuntuPool) -AzDOWindowsPool $(AzDOWindowsPool)'
-                deploymentMode: 'Incremental'
+            - ${{ if eq(parameters.allowBatchPublicNetworkAccess, true) }}:
+              - task: AzureResourceGroupDeployment@2
+                displayName: 'ARM template execution'
+                inputs:
+                  azureSubscription: '$(azureSubscription)'
+                  action: 'Create Or Update Resource Group'
+                  resourceGroupName: '${{ parameters.devResourceGroupName }}'
+                  location: 'West Europe'
+                  templateLocation: 'Linked artifact'
+                  csmFile: '$(Pipeline.Workspace)/Extract/azuredeploy-allowBatchPublicNetworkAccess.json'
+                  csmParametersFile: '$(Pipeline.Workspace)/Extract/azuredeploy.parameters.json'
+                  overrideParameters: '-appName ${{ parameters.devResourceGroupName }} -create_WindowsBatchPool $(CreateWindowsPool) -create_UbuntuBatchPool $(CreateUbuntuPool) -AzDOUrl $(AzDOUrl) -AzDOToken $(AzDOToken) -AzDOUbuntuPool $(AzDOUbuntuPool) -AzDOWindowsPool $(AzDOWindowsPool)'
+                  deploymentMode: 'Incremental'
+
+            - ${{ if eq(parameters.allowBatchPublicNetworkAccess, false) }}:
+              - task: AzureResourceGroupDeployment@2
+                displayName: 'ARM template execution'
+                inputs:
+                  azureSubscription: '$(azureSubscription)'
+                  action: 'Create Or Update Resource Group'
+                  resourceGroupName: '${{ parameters.devResourceGroupName }}'
+                  location: 'West Europe'
+                  templateLocation: 'Linked artifact'
+                  csmFile: '$(Pipeline.Workspace)/Extract/azuredeploy.json'
+                  csmParametersFile: '$(Pipeline.Workspace)/Extract/azuredeploy.parameters.json'
+                  overrideParameters: '-appName ${{ parameters.devResourceGroupName }} -create_WindowsBatchPool $(CreateWindowsPool) -create_UbuntuBatchPool $(CreateUbuntuPool) -AzDOUrl $(AzDOUrl) -AzDOToken $(AzDOToken) -AzDOUbuntuPool $(AzDOUbuntuPool) -AzDOWindowsPool $(AzDOWindowsPool)'
+                  deploymentMode: 'Incremental'
 
             - task: AzureCLI@2
               displayName: 'Import Docker Image from dockerhub'
