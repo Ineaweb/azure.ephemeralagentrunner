@@ -178,9 +178,9 @@ stages:
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   az acr update --name poc001devacr --public-network-enabled true
-                  az acr import -n ${{ parameters.devResourceGroupName }}devacr --source docker.io/pmorisseau/azdo-agent:ubuntu-20.04-azdo -t azdo-agent:ubuntu-20.04-azdo
-                  az acr import -n ${{ parameters.devResourceGroupName }}devacr --source docker.io/pmorisseau/azdo-agent:ubuntu-20.04-azdo -t azdo-agent:ubuntu-18.04-azdo
-                  az acr import -n ${{ parameters.devResourceGroupName }}devacr --source docker.io/pmorisseau/azdo-agent:windows-core-ltsc2019-azdo -t azdo-agent:windows-core-ltsc2019-azdo
+                  az acr import -n ${{ parameters.devResourceGroupName }}devacr --source docker.io/pmorisseau/azdo-agent:ubuntu-20.04-azdo -t azdo-agent:ubuntu-20.04-azdo --force
+                  az acr import -n ${{ parameters.devResourceGroupName }}devacr --source docker.io/pmorisseau/azdo-agent:ubuntu-20.04-azdo -t azdo-agent:ubuntu-18.04-azdo --force
+                  az acr import -n ${{ parameters.devResourceGroupName }}devacr --source docker.io/pmorisseau/azdo-agent:windows-core-ltsc2019-azdo -t azdo-agent:windows-core-ltsc2019-azdo --force
                   az acr update --name poc001devacr --public-network-enabled false
 
             - task: AzureCLI@2
