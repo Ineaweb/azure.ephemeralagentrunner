@@ -18,7 +18,7 @@
         "value": "40.74.28.0/23"
       },
       "BatchAccountPoolVMType": {
-        "value": "Standard_D2_v3"
+        "value": "Standard_D2s_v3"
       },
       "TaskSlotsPerNode": {
         "value": 5
