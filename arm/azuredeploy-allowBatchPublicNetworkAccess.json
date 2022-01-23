@@ -403,7 +403,7 @@
                   "imageReference": {
                       "publisher": "microsoftwindowsserver",
                       "offer": "windowsserver",
-                      "sku": "2019-datacenter-with-containers-smalldisk",
+                      "sku": "2019-datacenter-with-containers",
                       "version": "latest"
                   },
                   "nodeAgentSkuId": "batch.node.windows amd64",
