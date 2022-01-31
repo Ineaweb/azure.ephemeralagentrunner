@@ -431,7 +431,7 @@
           "networkConfiguration": {
               "subnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('net_name'), 'batch')]",
               "publicIPAddressConfiguration": {
-                  "provision": "NoPublicIPAdresses"
+                  "provision": "NoPublicIPAddresses"
               }
           },
           "scaleSettings": {
@@ -491,7 +491,7 @@
           "networkConfiguration": {
               "subnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('net_name'), 'batch')]",
               "publicIPAddressConfiguration": {
-                  "provision": "NoPublicIPAdresses"
+                  "provision": "NoPublicIPAddresses"
               }
           },
           "scaleSettings": {
