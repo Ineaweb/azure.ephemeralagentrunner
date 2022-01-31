@@ -503,7 +503,7 @@
           "networkConfiguration": {
               "subnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('net_name'), 'batch')]",
               "publicIPAddressConfiguration": {
-                  "provision": "BatchManaged"
+                  "provision": "NoPublicIPAdresses"
               }
           },
           "scaleSettings": {
@@ -563,7 +563,7 @@
           "networkConfiguration": {
               "subnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('net_name'), 'batch')]",
               "publicIPAddressConfiguration": {
-                  "provision": "BatchManaged"
+                  "provision": "NoPublicIPAdresses"
               }
           },
           "scaleSettings": {
