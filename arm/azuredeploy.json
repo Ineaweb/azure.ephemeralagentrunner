@@ -151,6 +151,8 @@
     "privateEndpoint_api": "2021-05-01",
     "resourcedeployment_api": "2021-04-01",
     "privateDnsZones_api": "2020-06-01",
+    "natGateways_api": "2019-09-01",
+    "publicIpAddresses_api": "2020-08-01",    
     "sto_name": "[concat(parameters('appName') , parameters('environment') , 'sto')]",
     "net_name": "[concat(parameters('appName') , '-' , parameters('environment') , '-net')]",
     "pln_name": "[concat(parameters('appName') , '-' , parameters('environment') , '-pln')]",
@@ -159,16 +161,55 @@
     "containerRegistry_name": "[concat(parameters('appName') , parameters('environment') , 'acr')]",
     "acrprivateEndpoint_name": "[concat(parameters('appName') , '-' , parameters('environment') , '-acr-pep')]",
     "abaprivateEndpoint_name": "[concat(parameters('appName') , '-' , parameters('environment') , '-aba-pep')]",
+    "abanatGateways_name": "[concat(parameters('appName') , '-' , parameters('environment') , '-aba-ngt')]",
+    "abanatPublicIpAddress_name": "[concat(parameters('appName') , '-' , parameters('environment') , '-aba-pip')]",          
     "storageAccountid": "[concat(resourceGroup().id, '/providers/', 'Microsoft.Storage/storageAccounts/', parameters('appName') , parameters('environment') , 'sto')]",
     "batchAccountid": "[concat(resourceGroup().id, '/providers/', 'Microsoft.Batch/batchAccounts/', variables('batchAccount_name'))]",
     "containerRegistryid": "[concat(resourceGroup().id, '/providers/', 'Microsoft.ContainerRegistry/registries/', variables('containerRegistry_name'))]"
   },
   "resources": [
     {
+      "apiVersion": "[variables('publicIpAddresses_api')]",
+      "type": "Microsoft.Network/publicIpAddresses",
+      "name": "[variables('abanatPublicIpAddress_name')]",
+      "location": "[parameters('location')]",
+      "sku": {
+          "name": "Standard"
+      },
+      "properties": {
+          "publicIPAllocationMethod": "Static"
+      }
+    },
+    {
+      "apiVersion": "[variables('natGateways_api')]",
+      "type": "Microsoft.Network/natGateways",
+      "name": "[variables('abanatGateways_name')]",
+      "location": "[parameters('location')]",
+      "sku": {
+          "name": "Standard"
+      },
+      "zones": [],
+      "properties": {
+          "publicIPAddresses": [
+              {
+                  "id": "[resourceId('Microsoft.Network/publicIpAddresses/', variables('abanatPublicIpAddress_name'))]"
+              }
+          ],
+          "publicIPPrefixes": [],
+          "idleTimeoutInMinutes": 4
+      },
+      "dependsOn": [
+          "[concat('Microsoft.Network/publicIpAddresses/', variables('abanatPublicIpAddress_name'))]"
+      ]
+    },   
+    {
       "apiVersion": "[variables('net_api')]",
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('net_name')]",
       "location": "[parameters('location')]",
+      "dependsOn": [
+          "[resourceId('Microsoft.Network/natGateways', variables('abanatGateways_name'))]"
+      ],       
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
@@ -185,6 +226,18 @@
                 "privateLinkServiceNetworkPolicies": "Enabled"
             }
           },
+          {
+            "name": "batchpool",
+            "properties": {
+                "addressPrefix": "192.168.1.96/27",
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Disabled",
+                "privateLinkServiceNetworkPolicies": "Disabled",
+                "natGateway": {
+                    "id": "[resourceId('Microsoft.Network/natGateways/', variables('abanatGateways_name'))]"
+                }
+            }
+          },          
           {
             "name": "registry",
             "properties": {
@@ -501,7 +554,7 @@
               }
           },
           "networkConfiguration": {
-              "subnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('net_name'), 'batch')]",
+              "subnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('net_name'), 'batchpool')]",
               "publicIPAddressConfiguration": {
                   "provision": "NoPublicIPAddresses"
               }
@@ -561,7 +614,7 @@
               }
           },
           "networkConfiguration": {
-              "subnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('net_name'), 'batch')]",
+              "subnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('net_name'), 'batchpool')]",
               "publicIPAddressConfiguration": {
                   "provision": "NoPublicIPAddresses"
               }
