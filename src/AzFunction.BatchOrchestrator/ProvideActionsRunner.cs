@@ -66,13 +66,6 @@ namespace BatchOrchestrator
                         job.Id = request.JobName;
                         job.OnAllTasksComplete = OnAllTasksComplete.NoAction;
                         job.OnTaskFailure = OnTaskFailure.NoAction;
-                        job.CommonEnvironmentSettings = new List<EnvironmentSetting>()
-                            {
-                                new EnvironmentSetting("ActionsRunner_URL", request.GithubRepositoryUrl),
-                                new EnvironmentSetting("ActionsRunner_TOKEN", request.GithubRepositoryToken),
-                                new EnvironmentSetting("ActionsRunner_POOL", request.RunnerPoolName),
-                                new EnvironmentSetting("ActionsRunner_DISPOSE", "true")
-                            };
                         await job.CommitAsync();
                     }
 
@@ -91,7 +84,14 @@ namespace BatchOrchestrator
             var cloudTask = new CloudTask(singleTask.TaskName, "")
             {
                 ContainerSettings = new TaskContainerSettings($"{EnvironmentVariables.ContainerRegistryServer}/githubactions-runner:{singleTask.RunnerImageName}"),
-                UserIdentity = new UserIdentity(new AutoUserSpecification(AutoUserScope.Task, ElevationLevel.Admin))
+                UserIdentity = new UserIdentity(new AutoUserSpecification(AutoUserScope.Task, ElevationLevel.Admin)),
+                EnvironmentSettings = new List<EnvironmentSetting>()
+                {
+                    new EnvironmentSetting("ActionsRunner_URL", singleTask.GithubRepositoryUrl),
+                    new EnvironmentSetting("ActionsRunner_TOKEN", singleTask.GithubRepositoryToken),
+                    new EnvironmentSetting("ActionsRunner_POOL", singleTask.RunnerPoolName),
+                    new EnvironmentSetting("ActionsRunner_DISPOSE", "true")
+                }
             };
 
             return cloudTask;
