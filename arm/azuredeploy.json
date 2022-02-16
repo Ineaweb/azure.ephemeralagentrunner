@@ -538,7 +538,8 @@
                   "containerConfiguration": {
                       "type": "DockerCompatible",
                       "containerImageNames": [
-                          "[concat(reference(variables('containerRegistryid'), variables('containerRegistry_api')).loginServer, '/azdo-agent:windows-core-ltsc2019-azdo')]"
+                          "[concat(reference(variables('containerRegistryid'), variables('containerRegistry_api')).loginServer, '/azdo-agent:windows-core-ltsc2019-azdo')]",
+                          "[concat(reference(variables('containerRegistryid'), variables('containerRegistry_api')).loginServer, '/githubactions-runner:windows-core-ltsc2019-actionsrunner')]"
                       ],
                       "containerRegistries": [
                           {
@@ -598,7 +599,9 @@
                       "type": "DockerCompatible",
                       "containerImageNames": [
                           "[concat(reference(variables('containerRegistryid'), variables('containerRegistry_api')).loginServer, '/azdo-agent:ubuntu-20.04-azdo')]",
-                          "[concat(reference(variables('containerRegistryid'), variables('containerRegistry_api')).loginServer, '/azdo-agent:ubuntu-18.04-azdo')]"
+                          "[concat(reference(variables('containerRegistryid'), variables('containerRegistry_api')).loginServer, '/azdo-agent:ubuntu-18.04-azdo')]",
+                          "[concat(reference(variables('containerRegistryid'), variables('containerRegistry_api')).loginServer, '/githubactions-runner:ubuntu-18.04-actionsrunner')]",
+                          "[concat(reference(variables('containerRegistryid'), variables('containerRegistry_api')).loginServer, '/githubactions-runner:ubuntu-18.04-actionsrunner')]"
                       ],
                       "containerRegistries": [
                           {
