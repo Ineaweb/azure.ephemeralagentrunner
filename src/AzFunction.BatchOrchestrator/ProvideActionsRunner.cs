@@ -89,11 +89,15 @@ namespace BatchOrchestrator
                 {
                     new EnvironmentSetting("ActionsRunner_URL", singleTask.GithubRepositoryUrl),
                     new EnvironmentSetting("ActionsRunner_TOKEN", singleTask.GithubRepositoryToken),
-                    new EnvironmentSetting("ActionsRunner_POOL", singleTask.RunnerPoolName),
                     new EnvironmentSetting("ActionsRunner_DISPOSE", "true")
                 }
             };
 
+            if (!string.IsNullOrEmpty(singleTask.RunnerPoolName))
+            {
+                cloudTask.EnvironmentSettings.Add(new EnvironmentSetting("ActionsRunner_POOL", singleTask.RunnerPoolName));
+            }
+            
             return cloudTask;
         }
     }
