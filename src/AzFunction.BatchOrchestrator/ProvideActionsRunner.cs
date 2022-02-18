@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using BatchOrchestrator.Models;
 using BatchOrchestrator.Helpers;
 using System.Collections.Generic;
+using RestSharp;
 
 namespace BatchOrchestrator
 {
@@ -35,9 +36,18 @@ namespace BatchOrchestrator
                 {
                     jsonData = await reader.ReadToEndAsync();
                 }
-                var result = await RunInternal(JsonConvert.DeserializeObject<RunnerRequest>(jsonData));
 
-                return await Task.FromResult(result);
+                var webhookData = JsonConvert.DeserializeObject<WorkflowJobWebhook>(jsonData);
+                if (webhookData != null 
+                    && webhookData.action == "queued"
+                    && webhookData.workflow_job.status == "queued"
+                    && webhookData.workflow_job.labels.Contains("self-hosted"))
+                {
+                    var result = await RunInternal(webhookData);
+
+                    return await Task.FromResult(result);
+                }
+                return await Task.FromResult(default(IActionResult));
             }
             catch (Exception ex)
             {
@@ -46,38 +56,49 @@ namespace BatchOrchestrator
             }
         }
 
-        internal async Task<IActionResult> RunInternal(RunnerRequest request)
+        internal async Task<string> GetRunnerToken(WorkflowJobWebhook request)
+        {
+            var client = new RestClient(request.ApiUrl);
+            var rqst = new RestRequest("/actions/runners/registration-token", Method.Post);
+            rqst.AddHeader("Accept", "application/vnd.github.v3+json");
+            rqst.AddHeader("Authorization", $"token {EnvironmentVariables.GithubToken}");
+            var queryResult = await client.ExecutePostAsync<RunnerTokenResponse>(rqst);
+
+            return queryResult.IsSuccessful ? queryResult.Data.token : null;
+        }
+
+        internal async Task<IActionResult> RunInternal(WorkflowJobWebhook request)
         {
             var result = default(IActionResult);
-                CloudTask task = InitializeCloudTask(request);
+            CloudTask task = await InitializeCloudTask(request);
 
-                using (var batchClient = BatchHelpers.CreateBatchClient())
+            using (var batchClient = BatchHelpers.CreateBatchClient())
+            {
+                CloudJob job = null;
+
+                try
                 {
-                    CloudJob job = null;
-
-                    try
-                    {
-                        job = await batchClient.JobOperations.GetJobAsync(request.JobName);
-                    }
-                    catch 
-                    {
-                        job = batchClient.JobOperations.CreateJob();
-                        job.PoolInformation = new PoolInformation() { PoolId = request.PoolName };
-                        job.Id = request.JobName;
-                        job.OnAllTasksComplete = OnAllTasksComplete.NoAction;
-                        job.OnTaskFailure = OnTaskFailure.NoAction;
-                        await job.CommitAsync();
-                    }
-
-                    await batchClient.JobOperations.AddTaskAsync(job.Id, task);
+                    job = await batchClient.JobOperations.GetJobAsync(request.JobName);
+                }
+                catch 
+                {
+                    job = batchClient.JobOperations.CreateJob();
+                    job.PoolInformation = new PoolInformation() { PoolId = request.PoolName };
+                    job.Id = request.JobName;
+                    job.OnAllTasksComplete = OnAllTasksComplete.NoAction;
+                    job.OnTaskFailure = OnTaskFailure.NoAction;
+                    await job.CommitAsync();
                 }
 
-                result = new OkObjectResult(null);
+                await batchClient.JobOperations.AddTaskAsync(job.Id, task);
+            }
+
+            result = new OkObjectResult(null);
 
             return result;
         }
 
-        internal CloudTask InitializeCloudTask(RunnerRequest singleTask)
+        internal async Task<CloudTask> InitializeCloudTask(WorkflowJobWebhook singleTask)
         {
             this._logger.LogInformation("Initializing CloudTask Task '{singleTaskName}'...", singleTask.TaskName);
 
@@ -87,16 +108,17 @@ namespace BatchOrchestrator
                 UserIdentity = new UserIdentity(new AutoUserSpecification(AutoUserScope.Task, ElevationLevel.Admin)),
                 EnvironmentSettings = new List<EnvironmentSetting>()
                 {
-                    new EnvironmentSetting("ActionsRunner_URL", singleTask.GithubRepositoryUrl),
-                    new EnvironmentSetting("ActionsRunner_TOKEN", singleTask.GithubRepositoryToken),
+                    new EnvironmentSetting("ActionsRunner_URL", singleTask.RunnerUrl),
+                    new EnvironmentSetting("ActionsRunner_TOKEN", await GetRunnerToken(singleTask)),
+                    new EnvironmentSetting("ActionsRunner_LABELS", string.Join(",",singleTask.workflow_job.labels)),
                     new EnvironmentSetting("ActionsRunner_DISPOSE", "true")
                 }
             };
 
-            if (!string.IsNullOrEmpty(singleTask.RunnerPoolName))
-            {
-                cloudTask.EnvironmentSettings.Add(new EnvironmentSetting("ActionsRunner_POOL", singleTask.RunnerPoolName));
-            }
+            //if (!string.IsNullOrEmpty(singleTask.RunnerPoolName))
+            //{
+            //    cloudTask.EnvironmentSettings.Add(new EnvironmentSetting("ActionsRunner_POOL", singleTask.RunnerPoolName));
+            //}
             
             return cloudTask;
         }

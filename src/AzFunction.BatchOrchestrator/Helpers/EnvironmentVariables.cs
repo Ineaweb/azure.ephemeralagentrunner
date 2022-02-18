@@ -24,5 +24,7 @@ namespace BatchOrchestrator.Helpers
         public static readonly string AzDOUbuntuPool = Environment.GetEnvironmentVariable(nameof(AzDOUbuntuPool), EnvironmentVariableTarget.Process);
 
         public static readonly string AzDOWindowsPool = Environment.GetEnvironmentVariable(nameof(AzDOWindowsPool), EnvironmentVariableTarget.Process);
+
+        public static readonly string GithubToken = Environment.GetEnvironmentVariable(nameof(GithubToken), EnvironmentVariableTarget.Process);
     }
 }
