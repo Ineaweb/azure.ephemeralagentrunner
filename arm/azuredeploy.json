@@ -62,6 +62,34 @@
         "description": "Plage IP du service Azure DevOps."
       }
     },
+    "GithubIpRange1": {
+      "type":"string",
+      "defaultValue":"192.30.252.0/22",
+      "metadata": {
+        "description": "Plage IP N°1 du service Github."
+      }
+    },
+    "GithubIpRange2": {
+      "type":"string",
+      "defaultValue":"185.199.108.0/22",
+      "metadata": {
+        "description": "Plage IP N°2 du service Github."
+      }
+    }, 
+    "GithubIpRange3": {
+      "type":"string",
+      "defaultValue":"140.82.112.0/20",
+      "metadata": {
+        "description": "Plage IP N°3 du service Github."
+      }
+    }, 
+    "GithubIpRange4": {
+      "type":"string",
+      "defaultValue":"143.55.64.0/20",
+      "metadata": {
+        "description": "Plage IP N°4 du service Github."
+      }
+    }, 
     "BatchAccountPoolVMType":{
       "type": "string",
       "defaultValue": "Standard_F2s_v2",
@@ -836,6 +864,34 @@
                 "priority": 100,
                 "name": "AzureDevOps"
             },
+            {
+                "ipAddress": "[parameters('GithubIpRange1')]",
+                "action": "Allow",
+                "tag": "Default",
+                "priority": 101,
+                "name": "Github1"
+            },
+            {
+                "ipAddress": "[parameters('GithubIpRange2')]",
+                "action": "Allow",
+                "tag": "Default",
+                "priority": 102,
+                "name": "Github2"
+            },
+            {
+                "ipAddress": "[parameters('GithubIpRange3')]",
+                "action": "Allow",
+                "tag": "Default",
+                "priority": 103,
+                "name": "Github3"
+            },
+            {
+                "ipAddress": "[parameters('GithubIpRange4')]",
+                "action": "Allow",
+                "tag": "Default",
+                "priority": 104,
+                "name": "Github4"
+            },  
             {
                 "vnetSubnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('net_name'), 'batch')]",
                 "action": "Allow",

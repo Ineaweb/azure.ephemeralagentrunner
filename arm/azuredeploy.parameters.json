@@ -17,6 +17,18 @@
       "AzureDevOpsIpRange": {
         "value": "40.74.28.0/23"
       },
+      "GithubIpRange1": {
+        "value": "192.30.252.0/22"
+      },
+      "GithubIpRange2": {
+        "value": "185.199.108.0/22"
+      },
+      "GithubIpRange3": {
+        "value": "140.82.112.0/20"
+      },
+      "GithubIpRange4": {
+        "value": "143.55.64.0/20"
+      },                  
       "BatchAccountPoolVMType": {
         "value": "Standard_D2s_v3"
       },
