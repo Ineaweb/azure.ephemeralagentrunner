@@ -153,7 +153,7 @@ stages:
                   templateLocation: 'Linked artifact'
                   csmFile: '$(Pipeline.Workspace)/Extract/azuredeploy-allowBatchPublicNetworkAccess.json'
                   csmParametersFile: '$(Pipeline.Workspace)/Extract/azuredeploy.parameters.json'
-                  overrideParameters: '-appName ${{ parameters.devResourceGroupName }} -create_WindowsBatchPool $(CreateWindowsPool) -create_UbuntuBatchPool $(CreateUbuntuPool) -AzDOUrl $(AzDOUrl) -AzDOToken $(AzDOToken) -AzDOUbuntuPool $(AzDOUbuntuPool) -AzDOWindowsPool $(AzDOWindowsPool)'
+                  overrideParameters: '-appName ${{ parameters.devResourceGroupName }} -create_WindowsBatchPool $(CreateWindowsPool) -create_UbuntuBatchPool $(CreateUbuntuPool) -AzDOUrl $(AzDOUrl) -AzDOToken $(AzDOToken) -AzDOUbuntuPool $(AzDOUbuntuPool) -AzDOWindowsPool $(AzDOWindowsPool) -GithubToken $(GithubToken)'
                   deploymentMode: 'Incremental'
 
             - ${{ if eq(parameters.allowBatchPublicNetworkAccess, false) }}:

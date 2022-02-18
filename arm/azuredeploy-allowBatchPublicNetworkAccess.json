@@ -106,7 +106,13 @@
       "metadata": {
         "description": "PAT généré pour enregistrer vos agents dans votre votre organisation Azure DevOps"
       }
-    }                
+    },
+    "GithubToken": {
+      "type": "string",      
+      "metadata": {
+        "description": "PAT généré pour enregistrer vos runner dans github"
+      }
+    }                     
   },
   "variables": {
     "servicePlanPricingTiers": {
@@ -689,6 +695,10 @@
               "name": "AzDOToken",
               "value": "[parameters('AzDOToken')]"
             },
+            {
+              "name": "GithubToken",
+              "value": "[parameters('GithubToken')]"
+            },             
             {
               "name": "AzDOUbuntuPool",
               "value": "[parameters('AzDOUbuntuPool')]"
